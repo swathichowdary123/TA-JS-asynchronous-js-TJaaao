@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat Image Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #catImage {
+            max-width: 100%;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cat Image Website</h1>
+    <img id="catImage" alt="Random Cat Image">
+    <button onclick="getNewCat()">Get New Cat</button>
+
+    <script>
+        const catImage = document.getElementById('catImage');
+
+        async function getNewCat() {
+            try {
+                const response = await fetch('https://api.thecatapi.com/v1/images/search?limit=1&size=full');
+                const data = await response.json();
+                const imageUrl = data[0].url;
+
+                catImage.src = imageUrl;
+            } catch (error) {
+                console.error('Error fetching cat image:', error);
+            }
+        }
+
+        // Initial cat image on page load
+        getNewCat();
+    </script>
+</body>
+</html>

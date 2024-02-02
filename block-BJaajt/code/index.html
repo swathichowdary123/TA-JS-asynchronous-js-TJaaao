@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Github User Finder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #userInput {
+            margin-bottom: 10px;
+        }
+        #userInfo {
+            display: none;
+        }
+        #followers, #following {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Github User Finder</h1>
+    <input type="text" id="userInput" placeholder="Enter Github Username and press Enter">
+    <div id="userInfo">
+        <img id="avatar" alt="User Avatar">
+        <p id="username"></p>
+        <p id="followersCount">Followers: <span id="followers"></span></p>
+        <p id="followingCount">Following: <span id="following"></span></p>
+        <h2>Followers:</h2>
+        <ul id="followersList"></ul>
+        <h2>Following:</h2>
+        <ul id="followingList"></ul>
+    </div>
+
+    <script>
+        const userInput = document.getElementById('userInput');
+        const userInfo = document.getElementById('userInfo');
+        const avatar = document.getElementById('avatar');
+        const username = document.getElementById('username');
+        const followersCount = document.getElementById('followersCount');
+        const followingCount = document.getElementById('followingCount');
+        const followersList = document.getElementById('followersList');
+        const followingList = document.getElementById('followingList');
+
+        userInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                getUserInfo(userInput.value);
+            }
+        });
+
+        async function getUserInfo(username) {
+            try {
+                const userResponse = await fetch(`https://api.github.com/users/${username}`);
+                const userData = await userResponse.json();
+
+                const followersResponse = await fetch(`https://api.github.com/users/${username}/followers`);
+                const followersData = await followersResponse.json();
+
+                const followingResponse = await fetch(`https://api.github.com/users/${username}/following`);
+                const followingData = await followingResponse.json();
+
+                displayUserInfo(userData, followersData, followingData);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        }
+
+        function displayUserInfo(user, followers, following) {
+            avatar.src = user.avatar_url;
+            username.textContent = user.login;
+            followersCount.textContent = `Followers: ${user.followers}`;
+            followingCount.textContent = `Following: ${user.following}`;
+
+            followersList.innerHTML = '';
+            followingList.innerHTML = '';
+
+            followers.slice(0, 5).forEach(follower => {
+                const li = document.createElement('li');
+                li.innerHTML = `<img src="${follower.avatar_url}" alt="${follower.login}" title="${follower.login}">`;
+                followersList.appendChild(li);
+            });
+
+            following.slice(0, 5).forEach(followingUser => {
+                const li = document.createElement('li');
+                li.innerHTML = `<img src="${followingUser.avatar_url}" alt="${followingUser.login}" title="${followingUser.login}">`;
+                followingList.appendChild(li);
+            });
+
+            userInfo.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
