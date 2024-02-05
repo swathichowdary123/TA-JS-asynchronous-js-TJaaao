@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spaceflight News App</title>
+    <style>
+         body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 1em;
+            text-align: center;
+        }
+
+        main {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        .news-card {
+            border: 1px solid #ddd;
+            margin: 10px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        select {
+            padding: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        #loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 1em;
+        }
+
+        #error-message {
+            display: none;
+            color: red;
+            text-align: center;
+            padding: 1em;
+        }
+    </style>
+    </head>
+    <body>
+        <header>
+            <h1>Spaceflight News App</h1>
+        </header>
+    
+        <select id="news-source" onchange="getNews()">
+            <option value="">All Sources</option>
+        </select>
+    
+        <div id="loading-indicator">Loading...</div>
+        <div id="error-message"></div>
+        <div id="news-container"></div>
+    
+        <script>
+            const newsContainer = document.getElementById('news-container');
+            const newsSourceDropdown = document.getElementById('news-source');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const errorMessage = document.getElementById('error-message');
+    
+            async function fetchData(url) {
+                try {
+                    const response = await fetch(url);
+    
+                    if (!response.ok) {
+                        throw new Error('Error fetching data: ' + response.statusText);
+                    }
+    
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    throw new Error('Error fetching data: ' + error.message);
+                }
+            }
+    
+            function showLoading() {
+                loadingIndicator.style.display = 'block';
+            }
+    
+            function hideLoading() {
+                loadingIndicator.style.display = 'none';
+            }
+    
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+            }
+    
+            function hideError() {
+                errorMessage.style.display = 'none';
+            }
+            function renderNews(news) {
+            newsContainer.innerHTML = '';
+
+            news.forEach(item => {
+                const card = document.createElement('div');
+                card.classList.add('news-card');
+
+                const image = document.createElement('img');
+                image.src = item.imageUrl;
+                image.alt = 'News Image';
+                image.style.width = '100%';
+
+                const title = document.createElement('h2');
+                title.textContent = item.title;
+
+                const source = document.createElement('p');
+                source.textContent = 'Source: ' + item.newsSite;
+
+                const readMoreButton = document.createElement('a');
+                readMoreButton.href = item.url;
+                readMoreButton.textContent = 'Read More';
+
+                card.appendChild(image);
+                card.appendChild(title);
+                card.appendChild(source);
+                card.appendChild(readMoreButton);
+
+                newsContainer.appendChild(card);
+            });
+        }
+        async function populateDropdown() {
+            const data = await fetchData('https://api.spaceflightnewsapi.net/v3/articles?_limit=30');
+            const sources = [...new Set(data.map(item => item.newsSite))];
+            sources.forEach(source => {
+                const option = document.createElement('option');
+                option.value = source;
+                option.textContent = source;
+                newsSourceDropdown.appendChild(option);
+            });
+        }
+        async function getNews() {
+            hideError();
+            showLoading();
+
+            try {
+                const selectedSource = newsSourceDropdown.value;
+                const url = selectedSource
+                    ? `https://api.spaceflightnewsapi.net/v3/articles?_limit=30&newsSite=${selectedSource}`
+                    : 'https://api.spaceflightnewsapi.net/v3/articles?_limit=30';
+
+                const data = await fetchData(url);
+                renderNews(data);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        populateDropdown();
+        getNews();
+    </script>
+</body>
+</html>
