@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TODO App</title>
+    <style>
+        /* Add your styles here */
+    </style>
+</head>
+<body>
+
+    <h1>TODO App</h1>
+
+    <div>
+        <input type="text" id="newTodo" placeholder="Add a new todo">
+        <button onclick="addTodo()">Add</button>
+    </div>
+
+    <ul id="todoList"></ul>
+
+    <script>
+        const apiUrl = 'https://basic-todo-api.herokuapp.com/todos';
+        const todoList = document.getElementById('todoList');
+
+        // Fetch and display todos on page load
+        async function fetchTodos() {
+            const response = await fetch(apiUrl);
+            const todos = await response.json();
+
+            todoList.innerHTML = ''; // Clear existing todos
+
+            todos.forEach(todo => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${todo.id})">
+                    <span ${todo.completed ? 'style="text-decoration: line-through;"' : ''} ondblclick="editTodo(${todo.id})">${todo.title}</span>
+                    <button onclick="deleteTodo(${todo.id})">Delete</button>
+                `;
+                todoList.appendChild(li);
+            });
+        }
+
+        // Add new todo
+        async function addTodo() {
+            const newTodoInput = document.getElementById('newTodo');
+            const newTodoTitle = newTodoInput.value.trim();
+
+            if (newTodoTitle !== '') {
+                await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ title: newTodoTitle }),
+                });
+
+                newTodoInput.value = '';
+                fetchTodos(); // Refresh the todo list
+            }
+        }
+
+        // Toggle todo completion
+        async function toggleTodo(todoId) {
+            await fetch(`${apiUrl}/${todoId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ completed: true }),
+            });
+
+            fetchTodos(); // Refresh the todo list
+        }
+
+        // Delete todo
+        async function deleteTodo(todoId) {
+            await fetch(`${apiUrl}/${todoId}`, {
+                method: 'DELETE',
+            });
+
+            fetchTodos(); // Refresh the todo list
+        }
+
+        // Edit todo
+        async function editTodo(todoId) {
+            const newTitle = prompt('Edit todo:', '');
+            
+            if (newTitle !== null) {
+                await fetch(`${apiUrl}/${todoId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ title: newTitle }),
+                });
+
+                fetchTodos(); // Refresh the todo list
+            }
+        }
+
+        // Fetch todos on page load
+        fetchTodos();
+    </script>
+
+</body>
+</html>
