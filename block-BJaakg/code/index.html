@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game of Thrones Books</title>
+  <style>
+    /* Add your CSS styles here */
+    .book {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .characters-popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    }
+
+    .loading {
+      text-align: center;
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="books-container"></div>
+
+<div id="characters-popup" class="characters-popup">
+  <span id="close-popup" style="cursor: pointer; float: right;">&times;</span>
+  <div id="characters-list"></div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const booksContainer = document.getElementById("books-container");
+    const charactersPopup = document.getElementById("characters-popup");
+    const charactersList = document.getElementById("characters-list");
+    const closePopup = document.getElementById("close-popup");
+
+    // Fetch data from the API
+    fetch('https://www.anapioficeandfire.com/api/books')
+      .then(response => response.json())
+      .then(data => {
+        data.forEach(book => {
+          const bookElement = document.createElement('div');
+          bookElement.classList.add('book');
+
+          const showCharactersButton = document.createElement('button');
+          showCharactersButton.textContent = `Show Characters (${book.characters.length})`;
+          showCharactersButton.addEventListener('click', () => showCharactersPopup(book.characters));
+
+          bookElement.innerHTML = `
+            <p><strong>Name:</strong> ${book.name}</p>
+            <p><strong>Authors:</strong> ${book.authors.join(', ')}</p>
+            <p><strong>Number of Pages:</strong> ${book.numberOfPages}</p>
+            <p><strong>Publisher:</strong> ${book.publisher}</p>
+            <p><strong>Released:</strong> ${book.released}</p>
+            <p><strong>Country:</strong> ${book.country}</p>
+          `;
+
+          bookElement.appendChild(showCharactersButton);
+          booksContainer.appendChild(bookElement);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+        booksContainer.innerHTML = 'Error fetching data. Please try again later.';
+      });
+
+    closePopup.addEventListener('click', () => hideCharactersPopup());
+
+    function showCharactersPopup(characters) {
+      charactersList.innerHTML = '';
+
+      characters.forEach(characterUrl => {
+        fetch(characterUrl)
+          .then(response => response.json())
+          .then(character => {
+            const characterElement = document.createElement('div');
+            characterElement.innerHTML = `
+              <p><strong>Name:</strong> ${character.name}</p>
+              <p><strong>Gender:</strong> ${character.gender}</p>
+              <p><strong>Aliases:</strong> ${character.aliases.join(', ')}</p>
+              <p><strong>TV Series:</strong> ${character.tvSeries.join(', ')}</p>
+              <hr>
+            `;
+            charactersList.appendChild(characterElement);
+          })
+          .catch(error => {
+            console.error('Error fetching character data:', error);
+          });
+      });
+
+      charactersPopup.style.display = 'block';
+    }
+
+    function hideCharactersPopup() {
+      charactersPopup.style.display = 'none';
+    }
+  });
+</script>
+
+</body>
+</html>
